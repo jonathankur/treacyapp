@@ -15,10 +15,17 @@
     <author href="https://build.phonegap.com" email="support@phonegap.com">
         Jonathan Kur 
     </author>
-<gap:plugin name="cordova-plugin-camera" source="npm" />
-<gap:plugin name="cordova-plugin-file" source="npm"  />
-<gap:plugin name="cordova-plugin-file-transfer" source="npm" />
-<gap:plugin name="cordova-plugin-whitelist" source="npm" />
+<plugin name="cordova-plugin-camera">
+        <variable name="CAMERA_USAGE_DESCRIPTION" value="Allow the app to use your camera" />
+        <variable name="PHOTOLIBRARY_USAGE_DESCRIPTION" value="Allow the app to access your photos" />
+    </plugin>
+<plugin name="cordova-plugin-file-transfer" spec="^1.6.3" />
+<plugin name="cordova-plugin-file" spec="^4.3.3"  />
+<plugin name="cordova-plugin-whitelist" spec="1.3.1" />
+  <plugin name="cordova-android-support-gradle-release" source="npm">
+        <variable name="ANDROID_SUPPORT_VERSION" value="26.+" />
+    </plugin>
+
 <access origin="http://code.jquery.com" subdomains="true" />
 <access origin="http://treacydata.com" subdomains="true" />
 <icon src="icon.png" />
