@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+	<title>Treacy Fencing</title>
+ <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
+<style type="text/css">
+.jobd {
+background-color:lightskyblue; width:95%; padding:2px 10px 2px 10px;
+}
+</style>
+	<script src="phonegap.js"></script>
+      <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+	<script src="jquery.mobile-1.4.5.min.js"></script>
+	<script>
+
+
+var logOb;
+var fileURL='';
+var nameFile, fsroot=null;
+var juser=0, jobno=0;
+
+document.addEventListener('deviceready', onDeviceReady, false);
+
+function onDeviceReady() {
+	window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dir) {
+          fsroot=dir;
+		dir.getFile("log.jpg", {create:true}, function(file) {
+			logOb = file;
+                fileURL = logOb.toURL();
+		});
+
+	});
+}
+
+function fail(e) {
+alert('fail');
+	console.log("FileSystem Error");
+	console.dir(e);
+}
+
+function errorHandler()
+{ alert('error');
+}
+
+function jkinit()
+{
+     juser=window.localStorage.getItem('juser');
+     if (juser) {
+            $("#nam").html('Hello, '+window.localStorage.getItem('jname'));
+            $("#pan2").show();
+     }
+          else {
+            $("#pan1").show();
+     }       
+}
+
+function jlogin()
+{ url='http://treacydata.com/logmob.php?uname='+$("#uname").val()+'&pass='+$("#pass").val();
+  $.ajax({url: url, 
+    success : function(result) {
+      a=result.split('~');
+      if (a[0]>0) {
+         juser=a[0];
+         window.localStorage.setItem('juser',juser);
+         window.localStorage.setItem('jname',a[1]);
+            $("#nam").html('Hello, '+a[1]);
+            $("#pan1").hide();
+            $("#pan2").show();
+
+      }
+      else
+         alert('Invalid Login Details');        
+    }
+  });
+}
+
+function writeLog(b) {
+	if(!logOb) return;
+    logOb.createWriter(function(fileWriter) {
+fileWriter.onwriteend = function(e) {
+        doupload();
+      };
+		fileWriter.write(b);
+	}, fail);
+}
+
+function b64toBlob(b64Data, contentType, sliceSize) {
+    contentType = contentType || '';
+    sliceSize = sliceSize || 512;
+
+    var byteCharacters = atob(b64Data);
+    var byteArrays = [];
+
+    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+        var byteNumbers = new Array(slice.length);
+        for (var i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+
+        var byteArray = new Uint8Array(byteNumbers);
+
+        byteArrays.push(byteArray);
+    }
+
+ try{
+       blob = new Blob( byteArrays, {type : contentType});
+    }
+    catch(e){
+        // TypeError old chrome and FF
+        window.BlobBuilder = window.BlobBuilder || 
+                             window.WebKitBlobBuilder || 
+                             window.MozBlobBuilder || 
+                             window.MSBlobBuilder;
+        if(e.name == 'TypeError' && window.BlobBuilder){
+            var bb = new BlobBuilder();
+            bb.append(byteArrays.buffer);
+            blob = bb.getBlob(contentType);
+        }
+        else if(e.name == "InvalidStateError"){
+            // InvalidStateError (tested on FF13 WinXP)
+            blob = new Blob(byteArrays, {type : contentType});
+        }
+        else{
+alert('notsupported');
+            // We're screwed, blob constructor unsupported entirely   
+        }
+    }    
+    return blob;
+}
+
+function takepic()
+{
+  navigator.camera.getPicture(onSuccess, onFail, { quality: 50, targetWidth: 650, targetHeight: 650, 
+    destinationType: Camera.DestinationType.DATA_URL
+  });
+}
+
+function onSuccess(imageData) {
+//    var image = document.getElementById('thispic');
+//    image.src = "data:image/jpeg;base64," + imageData;
+//    var blob = b64toBlob(imageData, 'image/jpeg');
+//    alert('sending: '+imageData.length);
+    writeLog(imageData);
+}
+
+function onFail(message) {
+    alert('Failed because: ' + message);
+}
+
+var win = function (r) {
+  alert(r.bytesSent+' sent');
+ alert(r.response);
+          $("#mylist").html(r.response);
+         $("#mylist").trigger('create');
+ 
+}
+
+var fail = function (error) {
+   alert("An error has occurred: Code = " + error.code);
+}
+
+function doupload()
+{
+ var options = new FileUploadOptions();
+ options.fileKey = "file";
+ options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
+ options.mimeType = "application/base64";
+ options.trustAllHosts = true;
+ var params = {};
+ params.value1 = juser;
+ params.value2 = jobno;
+ options.params = params;
+ var ft = new FileTransfer();
+alert(JSON.stringify(options);
+ ft.upload(fileURL, encodeURI("http://treacydata.com/uploadpic.php"), win, fail, options);
+}
+
+function jlogout()
+{ window.localStorage.clear();
+  $("#pan2").hide();
+  $("#pan1").show();
+}
+
+
+function clrsearch()
+{ $("#lotno").val('');
+  $("#cname").val('');
+  $("#other").val('');
+}
+
+function dosearch()
+{ var url='http://treacydata.com/dosearch.php?lotno='+$("#lotno").val()+"&cname="+$("#cname").val()+"&other="+$("#other").val();
+  $.ajax({url: url, 
+    success : function(result) {
+         $("#mylist").html(result);
+         $("#mylist").trigger('create');
+         jQuery.mobile.changePage("#listpage", {transition: "flip"});
+    }
+  });
+}
+
+function sendnote()
+{ var url="http://treacydata.com/sendnote.php?jid="+jobno+"&rep="+juser+"&mess="+encodeURI($("#txt").val());
+  $.ajax({url: url, 
+    success : function(result) {
+         $("#mylist").html(result);
+         $("#mylist").trigger('create');
+    }
+  });
+}
+
+function findmine()
+{ var url='http://treacydata.com/findmine.php?id='+juser.toString();
+  $.ajax({url: url, 
+    success : function(result) {
+         $("#mylist").html(result);
+         $("#mylist").trigger('create');
+         jQuery.mobile.changePage("#listpage", {transition: "flip"});
+    }
+  });
+}
+
+function gojob(a,t)
+{ var url='http://treacydata.com/gojob.php?id='+a.toString()+'&typ='+t;
+  jobno=a;
+  $.ajax({url: url, 
+    success : function(result) {
+         $("#mylist").html(result);
+         $("#mylist").trigger('create');
+         jQuery.mobile.changePage("#listpage", {transition: "flip"});
+    }
+  });
+}
+
+</script>
+</head>
+<body onload="jkinit()">
+
+<div data-role="page" id="intropage" >
+<div data-role="header" data-theme="a" >
+<h3 name="nam" id="nam">Treacy Fencing</h3>
+ </div>
+ <div role="main" class="ui-content">
+<div name="pan1" id="pan1" style="display:none">
+<center>
+Log-In
+<br>
+<label for="uname">UserName</label>
+<input type="text" name="uname" id="uname" autocorrect="off" autocapitalize="off" autocomplete="off" >
+<br>
+<label for="pass">Password</label>
+<input type="password" name="pass" id="pass" autocorrect="off" autocapitalize="off" autocomplete="off" >
+<br>
+<input type="button" style="background-color:lightgreen" value="LOG IN" onclick="jlogin();">
+</div>
+
+<div name="pan2" id="pan2" style="display:none">
+<label for="lotno">LotNumber</label>
+<input type="number" name="lotno" id="lotno" autocorrect="off" autocapitalize="off" autocomplete="off" >
+<label for="cname">Customer Name</label>
+<input type="text" name="cname" id="cname" autocorrect="off" autocapitalize="off" autocomplete="off" >
+<label for="other">Other Detail</label>
+<input type="text" name="other" id="other" autocorrect="off" autocapitalize="off" autocomplete="off" >
+<br>
+<a href="#" class="ui-btn ui-corner-all" onclick="dosearch();" style="background-color:MediumSeaGreen">SEARCH</a>
+<a href="#" class="ui-btn ui-corner-all" onclick="clrsearch();" style="background-color:lightcoral">CLEAR</a>
+<a href="#" class="ui-btn ui-corner-all"  onclick="findmine();" style="background-color:dodgerblue">MY JOBS</a>
+</div>
+</div>
+</div>
+
+<div data-role="page" id="listpage" >
+<div data-role="header" data-position="fixed">
+<div style="float:left" id="custom-border-radius"><a href="#intropage" class="ui-btn ui-icon-back ui-btn-icon-notext ui-corner-all">Back</a></div>
+<h3>Treacy Fencing</h3>
+ </div>
+<div role="main" class="ui-content">
+<center>
+ <div data-inset="true" name="mylist" id="mylist">
+ </div>
+</center>
+</div>
+</div>
+
+</body>
+</html>
