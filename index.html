@@ -135,7 +135,7 @@ alert('notsupported');
 }
 
 function takepic()
-{
+{ alert('taking pic');
   navigator.camera.getPicture(onSuccess, onFail, { quality: 50, targetWidth: 650, targetHeight: 650, 
     destinationType: Camera.DestinationType.DATA_URL
   });
