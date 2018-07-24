@@ -135,8 +135,7 @@ alert('notsupported');
 }
 
 function takepic()
-{ alert('taking pic');
-  navigator.camera.getPicture(onSuccess, onFail, { quality: 50, targetWidth: 650, targetHeight: 650, 
+{navigator.camera.getPicture(onSuccess, onFail, { quality: 50, targetWidth: 650, targetHeight: 650, 
     destinationType: Camera.DestinationType.DATA_URL
   });
 }
@@ -154,8 +153,8 @@ function onFail(message) {
 }
 
 var win = function (r) {
-  alert(r.bytesSent+' sent');
- alert(r.response);
+//  alert(r.bytesSent+' sent');
+// alert(r.response);
           $("#mylist").html(r.response);
          $("#mylist").trigger('create');
  
